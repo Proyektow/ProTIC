@@ -1,10 +1,10 @@
 {
-  "name": "Mi Calendario Quest",
-  "short_name": "CalQuest",
+  "name": "CyberFocus Timer",
+  "short_name": "CyberTimer",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#121212",
-  "theme_color": "#6200ea",
+  "background_color": "#050608",
+  "theme_color": "#050608",
   "icons": [
     {
       "src": "icono.png",
