@@ -4,62 +4,336 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="manifest" href="manifest.json">
-  <title>Calendario Gamificado</title>
+  <title>CyberFocus Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      /* Tema 1: Oscuro Medio (Default) */
+      --bg-body: #1a1d24;
+      --bg-panel: #232732;
+      --bg-input: #151820;
+      --border-panel: rgba(0, 230, 118, 0.3);
+      --text-main: #e0e6ed;
+      --text-accent: #00e676;
+      --text-muted: #8c9ba8;
+      --clock-bg: #14171f;
+      --cell-bg: #1e222b;
+      --highlight: #00ffff;
+    }
+
+    body.theme-deep {
+      /* Tema 2: Cyber Profundo */
+      --bg-body: #050608;
+      --bg-panel: rgba(10, 15, 20, 0.95);
+      --bg-input: #080d14;
+      --border-panel: rgba(0, 255, 102, 0.25);
+      --text-main: #00ff66;
+      --text-accent: #00ff66;
+      --text-muted: #5a738e;
+      --clock-bg: #020305;
+      --cell-bg: #090e15;
+      --highlight: #00ffff;
+    }
+
+    body.theme-light {
+      /* Tema 3: Modo Claro Corregido (Arena suave / Alto contraste) */
+      --bg-body: #eaedf2;
+      --bg-panel: #ffffff;
+      --bg-input: #dfe4ec;
+      --border-panel: rgba(16, 149, 79, 0.3);
+      --text-main: #19202a;
+      --text-accent: #0b8043;
+      --text-muted: #536273;
+      --clock-bg: #f2f5f9;
+      --cell-bg: #e4e8f0;
+      --highlight: #0277bd;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Share Tech Mono', monospace;
+    }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background-color: #121212;
-      color: #ffffff;
-      padding: 16px;
+      background: var(--bg-body);
+      color: var(--text-main);
+      padding: 14px;
       min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transition: background 0.25s ease, color 0.25s ease;
     }
-    .card {
-      background: #1e1e1e;
-      border-radius: 14px;
+    .container {
+      width: 100%;
+      max-width: 440px;
+    }
+    
+    /* Navegación */
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+      width: 100%;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 10px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-panel);
+      color: var(--text-muted);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+    .tab-btn.active {
+      border-color: var(--highlight);
+      color: var(--highlight);
+      box-shadow: 0 0 10px rgba(0, 180, 216, 0.25);
+      background: rgba(0, 180, 216, 0.08);
+      font-weight: bold;
+    }
+    
+    .neon-panel {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-panel);
+      border-radius: 12px;
       padding: 16px;
-      margin-bottom: 16px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      margin-bottom: 14px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+      transition: background 0.25s ease;
     }
-    .stats-header {
+    .level-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-size: 0.85rem;
+    }
+    .level-badge {
+      color: var(--highlight);
+      font-size: 1.05rem;
+      font-weight: bold;
+    }
+    .xp-counter {
+      color: #e91e63;
+      font-weight: bold;
+    }
+    .xp-track {
+      background: var(--bg-input);
+      border: 1px solid rgba(120, 140, 160, 0.25);
+      height: 9px;
+      border-radius: 5px;
+      margin-top: 8px;
+      overflow: hidden;
+    }
+    .xp-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--text-accent), var(--highlight));
+      transition: width 0.4s ease;
+    }
+    .section-title {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      font-weight: bold;
+    }
+    
+    /* Categorías */
+    .tag-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .tag-pill {
+      background: var(--bg-input);
+      border: 1px solid var(--border-panel);
+      color: var(--text-muted);
+      padding: 5px 8px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+    .tag-pill.active {
+      border-color: var(--highlight);
+      color: var(--highlight);
+      box-shadow: 0 0 8px rgba(0, 180, 216, 0.25);
+      background: rgba(0, 180, 216, 0.08);
+      font-weight: bold;
+    }
+    .tag-del-btn {
+      color: #e53935;
+      font-weight: bold;
+      padding: 0 2px;
+      font-size: 0.9rem;
+    }
+
+    .input-box {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px dashed var(--border-panel);
+      padding: 9px;
+      color: var(--text-main);
+      border-radius: 6px;
+      outline: none;
+      font-size: 0.85rem;
+      margin-bottom: 8px;
+    }
+    
+    /* Reloj Principal */
+    .timer-frame {
+      border: 1px solid var(--border-panel);
+      background: var(--clock-bg);
+      padding: 24px 10px;
+      border-radius: 10px;
+      margin: 12px 0;
+      text-align: center;
+      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1);
+    }
+    .digital-clock {
+      font-size: 4.6rem;
+      letter-spacing: 4px;
+      color: var(--text-accent);
+      user-select: none;
+      font-weight: bold;
+    }
+    .active-tag-banner {
+      font-size: 0.95rem;
+      color: var(--highlight);
+      margin-bottom: 4px;
+      letter-spacing: 2px;
+      font-weight: bold;
+    }
+    .subgroup-banner {
+      font-size: 0.85rem;
+      color: #d48806;
+      margin-bottom: 4px;
+      letter-spacing: 1px;
+    }
+    body.theme-deep .subgroup-banner { color: #ffd700; }
+
+    .time-selector {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-input);
+      border: 1px dashed var(--border-panel);
+      padding: 9px 12px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+    }
+    .time-selector span { color: var(--text-muted); font-size: 0.8rem; }
+    .time-selector input {
+      background: transparent;
+      border: none;
+      color: var(--highlight);
+      font-size: 1.25rem;
+      width: 55px;
+      text-align: right;
+      outline: none;
+      font-weight: bold;
+    }
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      border: none;
+      font-weight: bold;
+    }
+    .btn-start {
+      background: transparent;
+      color: var(--text-accent);
+      border: 1px solid var(--text-accent);
+    }
+    .btn-cancel {
+      display: none;
+      background: transparent;
+      color: #e53935;
+      border: 1px solid #e53935;
+      margin-top: 10px;
+    }
+    .status-alert {
+      margin-top: 10px;
+      font-size: 0.75rem;
+      text-align: center;
+      color: #e65100;
+    }
+
+    /* Widget Auxiliar en Perfil */
+    .widget-box {
+      border: 1px solid #f59e0b;
+      background: var(--bg-panel);
+      border-radius: 8px;
+      padding: 14px;
+      margin-top: 10px;
+    }
+    .widget-header {
+      display: flex;
+      justify-content: space-between;
+      color: #f59e0b;
+      font-size: 0.8rem;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    .widget-timer {
+      font-size: 2.2rem;
+      color: #f59e0b;
+      text-align: center;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    .widget-controls {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .widget-btn {
+      flex: 1;
+      background: var(--bg-input);
+      border: 1px solid #f59e0b;
+      color: #f59e0b;
+      padding: 7px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: bold;
+    }
+    .widget-custom-box {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    /* Calendario */
+    .cal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 10px;
     }
-    .level-badge {
-      background: #6200ea;
-      color: #fff;
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-weight: bold;
-    }
-    .xp-text { color: #ffd700; font-weight: bold; }
-    .progress-bar-bg {
-      background: #333;
-      border-radius: 8px;
-      height: 12px;
-      width: 100%;
-      overflow: hidden;
-    }
-    .progress-bar-fill {
-      background: linear-gradient(90deg, #ffd700, #ff9800);
-      height: 100%;
-      width: 0%;
-      transition: width 0.4s ease-out;
-    }
-    /* Estilos del Calendario */
-    .cal-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 12px;
-    }
     .cal-btn {
-      background: #333;
-      color: #fff;
-      border: none;
-      padding: 8px 16px;
+      background: var(--bg-input);
+      color: var(--highlight);
+      border: 1px solid var(--border-panel);
+      padding: 5px 12px;
       border-radius: 6px;
       cursor: pointer;
       font-weight: bold;
@@ -67,147 +341,196 @@
     .cal-grid {
       display: grid;
       grid-template-columns: repeat(7, 1fr);
-      gap: 6px;
+      gap: 4px;
       text-align: center;
     }
-    .day-name {
+    .day-name { font-size: 0.75rem; color: var(--text-muted); padding-bottom: 4px; font-weight: bold; }
+    .day-cell {
+      padding: 9px 0;
+      border-radius: 6px;
+      background: var(--cell-bg);
       font-size: 0.8rem;
-      color: #aaa;
-      padding-bottom: 6px;
-      font-weight: bold;
-    }
-    .day {
-      padding: 12px 0;
-      border-radius: 8px;
+      color: var(--text-main);
       cursor: pointer;
-      font-size: 0.95rem;
-      background: #252525;
       position: relative;
-      transition: background 0.2s;
     }
-    .day.empty { background: transparent; cursor: default; }
-    .day.selected { background: #6200ea; font-weight: bold; color: white; }
-    .day.today { border: 1px solid #ffd700; }
-    
-    /* Puntos indicadores del calendario */
-    .day.has-tasks::after, .day.all-completed::after {
+    .day-cell.empty { background: transparent; cursor: default; }
+    .day-cell.selected { border: 1px solid var(--highlight); color: var(--highlight); font-weight: bold; }
+    .day-cell.has-data::after {
       content: '';
       position: absolute;
-      bottom: 4px;
+      bottom: 2px;
       left: 50%;
       transform: translateX(-50%);
-      width: 6px;
-      height: 6px;
+      width: 4px;
+      height: 4px;
+      background: var(--text-accent);
       border-radius: 50%;
     }
-    .day.has-tasks::after { background: #00e676; } /* Verde: Hay tareas pendientes */
-    .day.all-completed::after { background: #777; } /* Gris: Todo completado */
-
-    /* Formulario y tareas */
-    input[type="text"] {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: 1px solid #444;
-      background: #2a2a2a;
-      color: #fff;
-      font-size: 1rem;
-      margin-bottom: 12px;
-      outline: none;
-    }
-    input[type="text"]:focus { border-color: #6200ea; }
-    
-    .btn-add {
-      width: 100%;
-      background: #00e676;
-      color: #000;
-      border: none;
-      padding: 12px;
-      border-radius: 8px;
-      font-weight: bold;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-    .task-item {
+    .stat-row {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      background: #252525;
-      padding: 12px;
-      border-radius: 8px;
-      margin-top: 10px;
-      border-left: 4px solid #6200ea;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(120, 140, 160, 0.15);
+      font-size: 0.85rem;
     }
-    .task-item.completed {
-      border-left-color: #555;
-    }
-    .task-item.completed .task-text {
-      text-decoration: line-through;
-      color: #888;
-    }
-    .task-actions {
+    .stat-val { color: var(--highlight); font-weight: bold; }
+    .history-item {
+      background: var(--bg-input);
+      border-left: 3px solid var(--text-accent);
+      padding: 8px 10px;
+      margin-top: 6px;
+      border-radius: 4px;
+      font-size: 0.8rem;
       display: flex;
-      gap: 8px;
-    }
-    .btn-action {
-      background: #6200ea;
-      color: #fff;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .btn-delete {
-      background: #ff5252;
-      color: #fff;
-      border: none;
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 0.85rem;
-      font-weight: bold;
-      cursor: pointer;
+      justify-content: space-between;
     }
   </style>
 </head>
 <body>
 
-  <div class="card">
-    <div class="stats-header">
-      <div class="level-badge">Nivel <span id="level">1</span></div>
-      <div class="xp-text"><span id="xp-current">0</span> / 100 XP</div>
+<div class="container">
+  <!-- Navegación Superior (Se oculta en modo foco) -->
+  <div class="nav-tabs" id="main-nav-tabs">
+    <button class="tab-btn active" id="tab-btn-timer" onclick="switchView('timer')">Reloj</button>
+    <button class="tab-btn" id="tab-btn-profile" onclick="switchView('profile')">Perfil / Stats</button>
+  </div>
+
+  <!-- Nivel Global (Se oculta en modo foco) -->
+  <div class="neon-panel" id="panel-level-xp">
+    <div class="level-header">
+      <div class="level-badge">&gt; NIVEL <span id="level">1</span></div>
+      <div class="xp-counter"><span id="current-xp">0</span>/100 XP</div>
     </div>
-    <div class="progress-bar-bg">
-      <div class="progress-bar-fill" id="progress-fill"></div>
+    <div class="xp-track">
+      <div class="xp-bar" id="xp-fill"></div>
     </div>
   </div>
 
-  <div class="card">
-    <div class="cal-header">
-      <button class="cal-btn" onclick="prevMonth()">◄</button>
-      <h3 id="cal-month-title">Mes Año</h3>
-      <button class="cal-btn" onclick="nextMonth()">►</button>
+  <!-- VISTA 1: CRONÓMETRO -->
+  <div id="view-timer">
+    <!-- Panel de Categorías (Se oculta en modo foco) -->
+    <div class="neon-panel" id="tags-panel">
+      <div class="section-title">Categorías (Toca para activar / × para borrar)</div>
+      <div class="tag-container" id="tag-list"></div>
+      
+      <div class="section-title" style="margin-top: 8px;">Subgrupo / Actividad Actual</div>
+      <input type="text" class="input-box" id="subgroup-input" placeholder="Ej: Bíceps, Abdominales, Vocabulario...">
+
+      <div style="display: flex; gap: 6px;">
+        <input type="text" class="input-box" id="new-tag-input" placeholder="Nueva categoría (+)" maxlength="15" style="margin-bottom: 0;">
+        <button class="tab-btn" style="flex: 0 0 80px;" onclick="addNewTag()">Crear</button>
+      </div>
     </div>
-    <div class="cal-grid">
-      <div class="day-name">L</div>
-      <div class="day-name">M</div>
-      <div class="day-name">X</div>
-      <div class="day-name">J</div>
-      <div class="day-name">V</div>
-      <div class="day-name">S</div>
-      <div class="day-name">D</div>
+
+    <!-- Panel del Reloj (Permanece en Modo Foco) -->
+    <div class="neon-panel" id="clock-main-panel">
+      <div class="active-tag-banner" id="active-tag-display">[ EJERCICIO ]</div>
+      <div class="subgroup-banner" id="active-subgroup-display">&gt; Misión: Sin subgrupo</div>
+      
+      <div class="timer-frame">
+        <div class="digital-clock" id="time-display">20:00</div>
+      </div>
+
+      <div class="time-selector" id="controls-panel">
+        <span>OBJETIVO:</span>
+        <div>
+          <input type="number" id="minutes-input" min="1" max="180" value="20">
+          <span style="color: var(--highlight); font-weight: bold;">MIN</span>
+        </div>
+      </div>
+
+      <button class="btn btn-start" id="btn-start" onclick="startTimer()">INICIAR PROTOCOLO</button>
+      <button class="btn btn-cancel" id="btn-cancel" onclick="cancelTimer(true)">ABORTAR [0 XP]</button>
+
+      <div class="status-alert" id="status-msg">ALERTA: SALIR O BLOQUEAR CANCELA LA SESIÓN</div>
     </div>
-    <div class="cal-grid" id="cal-grid"></div>
   </div>
 
-  <div class="card">
-    <h3 id="selected-date-label" style="margin-bottom: 12px;">Misiones del día</h3>
-    <input type="text" id="task-title" placeholder="¿Qué misión cumplirás hoy?">
-    <button class="btn-add" onclick="addTask()">+ Añadir Misión (+25 XP)</button>
-    <div id="tasks-list" style="margin-top: 16px;"></div>
-  </div>
+  <!-- VISTA 2: PERFIL, AJUSTES Y WIDGET -->
+  <div id="view-profile" style="display: none;">
+    <!-- Selector de Tema -->
+    <div class="neon-panel">
+      <div class="section-title">TEMA DE COLOR Y FONDO</div>
+      <div style="display: flex; gap: 8px; margin-top: 6px;">
+        <button class="tab-btn" id="btn-theme-medium" onclick="setAppTheme('medium')">Oscuro Suave</button>
+        <button class="tab-btn" id="btn-theme-deep" onclick="setAppTheme('deep')">Cyber Profundo</button>
+        <button class="tab-btn" id="btn-theme-light" onclick="setAppTheme('light')">Arena Claro</button>
+      </div>
+    </div>
 
-  <script src="app.js"></script>
+    <!-- Widget Auxiliar Sin XP (Trasladado a Perfil) -->
+    <div class="neon-panel">
+      <div class="section-title">TEMPORIZADOR AUXILIAR (SIN XP)</div>
+      <div class="widget-box">
+        <div class="widget-header">
+          <span>⚙️ PAUSA O TAREA SECUNDARIA</span>
+          <span id="widget-label">LISTO</span>
+        </div>
+        <div class="widget-timer" id="widget-display">05:00</div>
+        
+        <div class="widget-controls">
+          <button class="widget-btn" onclick="startWidget(3)">3m</button>
+          <button class="widget-btn" onclick="startWidget(5)">5m</button>
+          <button class="widget-btn" onclick="startWidget(15)">15m</button>
+          <button class="widget-btn" style="border-color:#e53935; color:#e53935;" onclick="stopWidget()">Parar</button>
+        </div>
+
+        <div class="widget-custom-box">
+          <input type="number" class="input-box" id="widget-custom-mins" min="1" max="60" placeholder="Min (1-60)" style="margin-bottom: 0;">
+          <button class="widget-btn" style="flex: 0 0 110px;" onclick="startCustomWidget()">Fijar tiempo</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recordatorio Hidratación -->
+    <div class="neon-panel">
+      <div class="section-title">RECORDATORIO DE AGUA / HIDRATACIÓN</div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
+        <span style="font-size: 0.85rem; color: var(--text-muted);">Avisar cada:</span>
+        <select id="water-interval" class="tab-btn" style="flex:0 0 130px; padding: 6px;" onchange="updateWaterReminder()">
+          <option value="0">Desactivado</option>
+          <option value="30">Cada 30 min</option>
+          <option value="45">Cada 45 min</option>
+          <option value="60">Cada 60 min</option>
+        </select>
+      </div>
+      <button class="tab-btn" style="width: 100%; margin-top: 8px;" onclick="requestNotifyPermission()">Activar Notificaciones</button>
+    </div>
+
+    <!-- Calendario -->
+    <div class="neon-panel">
+      <div class="cal-header">
+        <button class="cal-btn" onclick="prevMonth()">◄</button>
+        <div id="cal-month-title" style="color: var(--highlight); letter-spacing: 1px; font-weight: bold;">MES AÑO</div>
+        <button class="cal-btn" onclick="nextMonth()">►</button>
+      </div>
+      <div class="cal-grid">
+        <div class="day-name">L</div>
+        <div class="day-name">M</div>
+        <div class="day-name">X</div>
+        <div class="day-name">J</div>
+        <div class="day-name">V</div>
+        <div class="day-name">S</div>
+        <div class="day-name">D</div>
+      </div>
+      <div class="cal-grid" id="cal-grid"></div>
+    </div>
+
+    <!-- Historial Día -->
+    <div class="neon-panel">
+      <div class="section-title" id="selected-day-label">SESIONES DEL DÍA</div>
+      <div id="day-history-list"></div>
+    </div>
+
+    <!-- Totales -->
+    <div class="neon-panel">
+      <div class="section-title">TOTAL MINUTOS HISTÓRICOS</div>
+      <div id="all-time-stats"></div>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>
