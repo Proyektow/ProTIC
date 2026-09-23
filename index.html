@@ -10,7 +10,6 @@
   <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
     :root {
-      /* Tema 1: Oscuro Medio */
       --bg-body: #1a1d24;
       --bg-panel: #232732;
       --bg-input: #151820;
@@ -24,7 +23,6 @@
     }
 
     body.theme-deep {
-      /* Tema 2: Cyber Profundo */
       --bg-body: #050608;
       --bg-panel: rgba(10, 15, 20, 0.95);
       --bg-input: #080d14;
@@ -38,7 +36,6 @@
     }
 
     body.theme-light {
-      /* Tema 3: Arena Claro */
       --bg-body: #eaedf2;
       --bg-panel: #ffffff;
       --bg-input: #dfe4ec;
@@ -68,11 +65,9 @@
       transition: background 0.25s ease, color 0.25s ease;
     }
 
-    /* Adaptación para Tablet: pasa de 440px a 960px */
     .container {
       width: 100%;
       max-width: 960px;
-      transition: all 0.3s ease;
     }
     
     .nav-tabs {
@@ -109,7 +104,6 @@
       padding: 18px;
       margin-bottom: 16px;
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
-      transition: background 0.25s ease;
     }
 
     .level-header {
@@ -120,10 +114,24 @@
       letter-spacing: 2px;
       font-size: 0.95rem;
     }
+    .rank-title {
+      font-size: 0.8rem;
+      color: #ffd700;
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
     .level-badge {
       color: var(--highlight);
       font-size: 1.15rem;
       font-weight: bold;
+    }
+    .streak-badge {
+      color: #ff9100;
+      font-weight: bold;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 4px;
     }
     .xp-counter {
       color: #e91e63;
@@ -152,7 +160,6 @@
       font-weight: bold;
     }
     
-    /* Categorías */
     .tag-container {
       display: flex;
       flex-wrap: wrap;
@@ -197,38 +204,6 @@
       margin-bottom: 10px;
     }
     
-    /* Reloj Principal Normal */
-    .timer-frame {
-      border: 1px solid var(--border-panel);
-      background: var(--clock-bg);
-      padding: 24px 10px;
-      border-radius: 12px;
-      margin: 14px 0;
-      text-align: center;
-      box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.1);
-    }
-    .digital-clock {
-      font-size: clamp(4.2rem, 10vw, 7.5rem);
-      letter-spacing: 6px;
-      color: var(--text-accent);
-      user-select: none;
-      font-weight: bold;
-    }
-    .active-tag-banner {
-      font-size: 1.1rem;
-      color: var(--highlight);
-      margin-bottom: 6px;
-      letter-spacing: 2px;
-      font-weight: bold;
-    }
-    .subgroup-banner {
-      font-size: 0.95rem;
-      color: #d48806;
-      margin-bottom: 6px;
-      letter-spacing: 1px;
-    }
-    body.theme-deep .subgroup-banner { color: #ffd700; }
-
     .time-selector {
       display: flex;
       justify-content: space-between;
@@ -237,7 +212,7 @@
       border: 1px dashed var(--border-panel);
       padding: 12px 16px;
       border-radius: 6px;
-      margin-bottom: 14px;
+      margin: 14px 0;
     }
     .time-selector span { color: var(--text-muted); font-size: 0.9rem; }
     .time-selector input {
@@ -267,12 +242,11 @@
       border: 1px solid var(--text-accent);
     }
     .btn-cancel {
-      display: none;
       background: transparent;
       color: #e53935;
       border: 1px solid #e53935;
-      margin-top: 14px;
-      max-width: 320px;
+      margin-top: 24px;
+      width: 250px;
     }
     .status-alert {
       margin-top: 12px;
@@ -281,58 +255,82 @@
       color: #e65100;
     }
 
-    /* MODO FOCO TOTAL: CENTRADO MATEMÁTICO */
-    body.focus-mode {
-      padding: 0;
-      justify-content: center;
-      align-items: center;
-      overflow: hidden;
-    }
-    body.focus-mode .container {
-      max-width: 100%;
+    /* PANTALLA CENTRADA ABSOLUTA */
+    #focus-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
       height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    body.focus-mode #view-timer {
-      width: 100%;
-      height: 100%;
-      display: flex !important;
-      justify-content: center;
-      align-items: center;
-    }
-    body.focus-mode #clock-main-panel {
-      border: none;
-      background: transparent;
-      box-shadow: none;
-      margin: 0;
-      padding: 20px;
-      width: 100%;
-      max-width: 800px;
-      display: flex;
+      background: var(--bg-body);
+      z-index: 9999;
       flex-direction: column;
       justify-content: center;
       align-items: center;
       text-align: center;
+      padding: 20px;
     }
-    body.focus-mode .timer-frame {
+    .focus-card {
       border: 2px solid var(--border-panel);
-      width: 100%;
-      padding: 40px 20px;
-      box-shadow: 0 0 30px rgba(0,0,0,0.3);
+      background: var(--clock-bg);
+      border-radius: 20px;
+      padding: 40px;
+      width: 90%;
+      max-width: 850px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
-    body.focus-mode .digital-clock {
-      font-size: clamp(5.5rem, 16vw, 11rem);
+    .focus-clock {
+      font-size: clamp(5.5rem, 16vw, 12rem);
+      letter-spacing: 8px;
+      color: var(--text-accent);
+      user-select: none;
+      font-weight: bold;
+      line-height: 1;
+      margin: 20px 0;
     }
-    body.focus-mode .active-tag-banner {
+    .focus-tag {
       font-size: 1.5rem;
+      color: var(--highlight);
+      letter-spacing: 3px;
+      font-weight: bold;
     }
-    body.focus-mode .subgroup-banner {
-      font-size: 1.2rem;
+    .focus-sub {
+      font-size: 1.15rem;
+      color: #d48806;
+      margin-top: 6px;
     }
+    body.theme-deep .focus-sub { color: #ffd700; }
 
-    /* VISTA DE PERFIL EN TABLET: 2 COLUMNAS */
+    /* VITRINA DE MEDALLAS */
+    .badge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+    .badge-card {
+      background: var(--bg-input);
+      border: 1px solid var(--border-panel);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      opacity: 0.35;
+      transition: all 0.3s;
+    }
+    .badge-card.unlocked {
+      opacity: 1;
+      border-color: #ffd700;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.25);
+    }
+    .badge-icon { font-size: 1.8rem; margin-bottom: 4px; }
+    .badge-name { font-size: 0.8rem; font-weight: bold; color: var(--text-main); }
+    .badge-card.unlocked .badge-name { color: #ffd700; }
+    .badge-desc { font-size: 0.7rem; color: var(--text-muted); margin-top: 2px; }
+
     @media (min-width: 768px) {
       .tablet-grid {
         display: grid;
@@ -341,7 +339,7 @@
       }
     }
 
-    /* Widget Auxiliar en Perfil */
+    /* Widget Auxiliar */
     .widget-box {
       border: 1px solid #f59e0b;
       background: var(--bg-panel);
@@ -453,28 +451,43 @@
 </head>
 <body>
 
-<div class="container">
-  <!-- Pestañas Superiores -->
-  <div class="nav-tabs" id="main-nav-tabs">
+<!-- MODO PANTALLA CENTRADA (EN EJECUCIÓN) -->
+<div id="focus-overlay">
+  <div class="focus-card">
+    <div class="focus-tag" id="focus-tag-title">[ EJERCICIO ]</div>
+    <div class="focus-sub" id="focus-sub-title">&gt; Misión: Sin subgrupo</div>
+    <div class="focus-clock" id="focus-clock-display">20:00</div>
+    <button class="btn btn-cancel" onclick="cancelTimer(true)">ABORTAR [0 XP]</button>
+  </div>
+</div>
+
+<div class="container" id="app-container">
+  <!-- Pestañas -->
+  <div class="nav-tabs">
     <button class="tab-btn active" id="tab-btn-timer" onclick="switchView('timer')">Reloj</button>
     <button class="tab-btn" id="tab-btn-profile" onclick="switchView('profile')">Perfil / Stats</button>
   </div>
 
-  <!-- Nivel Global -->
-  <div class="neon-panel" id="panel-level-xp">
+  <!-- Nivel, Rango y Racha -->
+  <div class="neon-panel">
     <div class="level-header">
-      <div class="level-badge">&gt; NIVEL <span id="level">1</span></div>
-      <div class="xp-counter"><span id="current-xp">0</span>/100 XP</div>
+      <div>
+        <div class="level-badge">&gt; NIVEL <span id="level">1</span></div>
+        <div class="rank-title" id="rank-title">RANGO: INICIADO</div>
+      </div>
+      <div style="text-align: right;">
+        <div class="streak-badge">🔥 <span id="streak-count">0</span> DÍAS</div>
+        <div class="xp-counter"><span id="current-xp">0</span>/100 XP</div>
+      </div>
     </div>
     <div class="xp-track">
       <div class="xp-bar" id="xp-fill"></div>
     </div>
   </div>
 
-  <!-- VISTA 1: CRONÓMETRO -->
+  <!-- VISTA 1: CONFIGURAR Y LANZAR -->
   <div id="view-timer">
-    <!-- Panel de Categorías -->
-    <div class="neon-panel" id="tags-panel">
+    <div class="neon-panel">
       <div class="section-title">Categorías (Toca para activar / × para borrar)</div>
       <div class="tag-container" id="tag-list"></div>
       
@@ -487,31 +500,22 @@
       </div>
     </div>
 
-    <!-- Panel del Reloj -->
-    <div class="neon-panel" id="clock-main-panel">
-      <div class="active-tag-banner" id="active-tag-display">[ EJERCICIO ]</div>
-      <div class="subgroup-banner" id="active-subgroup-display">&gt; Misión: Sin subgrupo</div>
-      
-      <div class="timer-frame">
-        <div class="digital-clock" id="time-display">20:00</div>
-      </div>
-
-      <div class="time-selector" id="controls-panel">
-        <span>OBJETIVO:</span>
+    <div class="neon-panel">
+      <div class="section-title">CONFIGURAR PROTOCOLO</div>
+      <div class="time-selector">
+        <span>OBJETIVO DE TIEMPO:</span>
         <div>
           <input type="number" id="minutes-input" min="1" max="180" value="20">
           <span style="color: var(--highlight); font-weight: bold;">MIN</span>
         </div>
       </div>
 
-      <button class="btn btn-start" id="btn-start" onclick="startTimer()">INICIAR PROTOCOLO</button>
-      <button class="btn btn-cancel" id="btn-cancel" onclick="cancelTimer(true)">ABORTAR [0 XP]</button>
-
-      <div class="status-alert" id="status-msg">ALERTA: SALIR O BLOQUEAR CANCELA LA SESIÓN</div>
+      <button class="btn btn-start" onclick="startTimer()">INICIAR PROTOCOLO (PANTALLA COMPLETA)</button>
+      <div class="status-alert">ALERTA: SALIR O CAMBIAR DE APP CANCELA LA SESIÓN</div>
     </div>
   </div>
 
-  <!-- VISTA 2: PERFIL, AJUSTES Y WIDGET (Diseño adaptado para tablet) -->
+  <!-- VISTA 2: PERFIL, LOGROS Y AJUSTES -->
   <div id="view-profile" style="display: none;">
     <!-- Selector de Tema -->
     <div class="neon-panel">
@@ -523,8 +527,14 @@
       </div>
     </div>
 
+    <!-- Vitrina de Logros / Badges -->
+    <div class="neon-panel">
+      <div class="section-title">VITRINA DE LOGROS DESBOQUEABLES</div>
+      <div class="badge-grid" id="badge-grid"></div>
+    </div>
+
     <div class="tablet-grid">
-      <!-- Columna Izquierda: Calendario -->
+      <!-- Columna Izquierda -->
       <div>
         <div class="neon-panel">
           <div class="cal-header">
@@ -544,7 +554,6 @@
           <div class="cal-grid" id="cal-grid"></div>
         </div>
 
-        <!-- Hidratación -->
         <div class="neon-panel">
           <div class="section-title">RECORDATORIO DE AGUA</div>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 6px;">
@@ -560,21 +569,18 @@
         </div>
       </div>
 
-      <!-- Columna Derecha: Sesiones del día, Totales y Widget -->
+      <!-- Columna Derecha -->
       <div>
-        <!-- Historial Día -->
         <div class="neon-panel">
           <div class="section-title" id="selected-day-label">SESIONES DEL DÍA</div>
           <div id="day-history-list"></div>
         </div>
 
-        <!-- Totales -->
         <div class="neon-panel">
           <div class="section-title">TOTAL MINUTOS HISTÓRICOS</div>
           <div id="all-time-stats"></div>
         </div>
 
-        <!-- Widget Auxiliar -->
         <div class="neon-panel">
           <div class="section-title">TEMPORIZADOR AUXILIAR (SIN XP)</div>
           <div class="widget-box">
