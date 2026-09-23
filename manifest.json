@@ -1,23 +1,18 @@
 {
   "name": "CyberFocus Tracker",
   "short_name": "CyberFocus",
-  "start_url": ".",
+  "id": "/calendario-app/",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "background_color": "#1a1d24",
   "theme_color": "#1a1d24",
   "icons": [
     {
-      "src": "icono.png",
-      "sizes": "any",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "icono.png",
-      "sizes": "any",
-      "type": "image/png",
-      "purpose": "any"
+      "src": "icono.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
     }
   ]
 }
