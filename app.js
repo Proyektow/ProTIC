@@ -53,7 +53,7 @@ function init() {
   renderBadges();
   initWaterReminder();
 
-  // Sonido háptico automático al pulsar cualquier botón o píldora de la app
+  // Sonido al interactuar con elementos
   document.addEventListener('click', (e) => {
     if (e.target.closest('button') || e.target.closest('.tag-pill') || e.target.closest('.day-cell')) {
       playSound('click');
@@ -68,23 +68,28 @@ function init() {
   });
 }
 
-/* ================= MOTOR DE SONIDO (WEB AUDIO API) ================= */
+/* ================= MOTOR DE SONIDO ================= */
 let audioCtxInstance = null;
 
 function getAudioCtx() {
-  if (!audioCtxInstance) {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    audioCtxInstance = new AudioContext();
+  try {
+    if (!audioCtxInstance) {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      if (AudioContext) audioCtxInstance = new AudioContext();
+    }
+    if (audioCtxInstance && audioCtxInstance.state === 'suspended') {
+      audioCtxInstance.resume();
+    }
+    return audioCtxInstance;
+  } catch (e) {
+    return null;
   }
-  if (audioCtxInstance.state === 'suspended') {
-    audioCtxInstance.resume();
-  }
-  return audioCtxInstance;
 }
 
 function playSound(type) {
   try {
     const c = getAudioCtx();
+    if (!c) return;
     const now = c.currentTime;
     const osc = c.createOscillator();
     const gain = c.createGain();
@@ -95,7 +100,7 @@ function playSound(type) {
       osc.type = 'sine';
       osc.frequency.setValueAtTime(650, now);
       osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
-      gain.gain.setValueAtTime(0.05, now);
+      gain.gain.setValueAtTime(0.04, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
       osc.start(now);
       osc.stop(now + 0.03);
@@ -103,12 +108,11 @@ function playSound(type) {
       osc.type = 'triangle';
       osc.frequency.setValueAtTime(440, now);
       osc.frequency.setValueAtTime(880, now + 0.1);
-      gain.gain.setValueAtTime(0.1, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      gain.gain.setValueAtTime(0.08, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
       osc.start(now);
-      osc.stop(now + 0.25);
+      osc.stop(now + 0.22);
     } else if (type === 'complete') {
-      // Acorde triunfal de 8 bits
       const notes = [523.25, 659.25, 783.99, 1046.50];
       notes.forEach((freq, idx) => {
         const o = c.createOscillator();
@@ -117,19 +121,19 @@ function playSound(type) {
         o.frequency.setValueAtTime(freq, now + idx * 0.08);
         o.connect(g);
         g.connect(c.destination);
-        g.gain.setValueAtTime(0.08, now + idx * 0.08);
-        g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.15);
+        g.gain.setValueAtTime(0.06, now + idx * 0.08);
+        g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.14);
         o.start(now + idx * 0.08);
-        o.stop(now + idx * 0.08 + 0.15);
+        o.stop(now + idx * 0.08 + 0.14);
       });
     } else if (type === 'abort') {
       osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(300, now);
-      osc.frequency.linearRampToValueAtTime(120, now + 0.25);
-      gain.gain.setValueAtTime(0.08, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+      osc.frequency.linearRampToValueAtTime(120, now + 0.22);
+      gain.gain.setValueAtTime(0.06, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
       osc.start(now);
-      osc.stop(now + 0.25);
+      osc.stop(now + 0.22);
     }
   } catch (e) {}
 }
@@ -185,13 +189,15 @@ function switchView(view) {
     renderCalendar();
     renderProfileStats();
     renderBadges();
-    document.getElementById('water-interval').value = waterIntervalTime;
+    const waterSelect = document.getElementById('water-interval');
+    if (waterSelect) waterSelect.value = waterIntervalTime;
   }
 }
 
 /* ================= ETIQUETAS ================= */
 function renderTags() {
   const container = document.getElementById('tag-list');
+  if (!container) return;
   container.innerHTML = '';
 
   if (tags.length === 0) {
@@ -216,6 +222,7 @@ function renderTags() {
     const delBtn = document.createElement('span');
     delBtn.className = 'tag-del-btn';
     delBtn.textContent = '×';
+    delBtn.title = 'Eliminar';
     delBtn.onclick = (e) => {
       e.stopPropagation();
       deleteTag(tag);
@@ -228,6 +235,7 @@ function renderTags() {
 
 function addNewTag() {
   const input = document.getElementById('new-tag-input');
+  if (!input) return;
   const val = input.value.trim();
   if (!val) return;
 
@@ -298,31 +306,43 @@ function updateUI() {
   const level = Math.floor(totalXp / 100) + 1;
   const currentXp = totalXp % 100;
   
-  document.getElementById('level').textContent = level;
-  document.getElementById('rank-title').textContent = getRankTitle(level);
-  document.getElementById('streak-count').textContent = calculateStreak();
-  document.getElementById('current-xp').textContent = currentXp;
-  document.getElementById('xp-fill').style.width = `${currentXp}%`;
+  const levelEl = document.getElementById('level');
+  const rankEl = document.getElementById('rank-title');
+  const streakEl = document.getElementById('streak-count');
+  const xpEl = document.getElementById('current-xp');
+  const xpFillEl = document.getElementById('xp-fill');
+
+  if (levelEl) levelEl.textContent = level;
+  if (rankEl) rankEl.textContent = getRankTitle(level);
+  if (streakEl) streakEl.textContent = calculateStreak();
+  if (xpEl) xpEl.textContent = currentXp;
+  if (xpFillEl) xpFillEl.style.width = `${currentXp}%`;
 }
 
 /* ================= CRONÓMETRO ================= */
 function startTimer() {
-  targetMinutes = parseInt(document.getElementById('minutes-input').value) || 1;
+  const minsInput = document.getElementById('minutes-input');
+  targetMinutes = minsInput ? (parseInt(minsInput.value) || 20) : 20;
   remainingSeconds = targetMinutes * 60;
   isRunning = true;
 
   playSound('start');
   requestWakeLock();
 
-  const sub = document.getElementById('subgroup-input').value.trim() || 'Sin subgrupo';
-  document.getElementById('focus-tag-title').textContent = `[ ${selectedTag.toUpperCase()} ]`;
-  document.getElementById('focus-sub-title').textContent = `> Misión: ${sub}`;
+  const subInput = document.getElementById('subgroup-input');
+  const sub = (subInput && subInput.value.trim()) ? subInput.value.trim() : 'Sin subgrupo';
+  
+  const tagTitle = document.getElementById('focus-tag-title');
+  const subTitle = document.getElementById('focus-sub-title');
+  if (tagTitle) tagTitle.textContent = `[ ${selectedTag.toUpperCase()} ]`;
+  if (subTitle) subTitle.textContent = `> Misión: ${sub}`;
 
   document.getElementById('focus-overlay').style.display = 'flex';
   document.getElementById('app-container').style.display = 'none';
 
   updateFocusClockDisplay();
 
+  clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     remainingSeconds--;
     updateFocusClockDisplay();
@@ -336,8 +356,10 @@ function startTimer() {
 function updateFocusClockDisplay() {
   const m = Math.floor(remainingSeconds / 60);
   const s = remainingSeconds % 60;
-  document.getElementById('focus-clock-display').textContent = 
-    `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  const clockEl = document.getElementById('focus-clock-display');
+  if (clockEl) {
+    clockEl.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
 }
 
 function closeFocusOverlay() {
@@ -363,7 +385,8 @@ function completeSession() {
   const earnedXp = targetMinutes * 2;
   totalXp += earnedXp;
 
-  const sub = document.getElementById('subgroup-input'].value.trim() || 'General';
+  const subInput = document.getElementById('subgroup-input');
+  const sub = (subInput && subInput.value.trim()) ? subInput.value.trim() : 'General';
   const now = new Date();
   const todayStr = formatDate(now);
 
@@ -411,7 +434,7 @@ function checkBadges(finishDate, todayStr) {
   if (hour < 8) unlock('early_bird');
 
   const exerciseMins = sessions
-    .filter(s => s.tag.toLowerCase() === 'ejercicio')
+    .filter(s => s.tag && s.tag.toLowerCase() === 'ejercicio')
     .reduce((sum, s) => sum + s.mins, 0);
   if (exerciseMins >= 300) unlock('iron_body');
 
@@ -442,12 +465,12 @@ function renderBadges() {
 /* ================= WIDGET AUXILIAR ================= */
 function startCustomWidget() {
   const input = document.getElementById('widget-custom-mins');
-  let mins = parseInt(input.value);
+  let mins = parseInt(input ? input.value : 5);
 
   if (isNaN(mins) || mins < 1) mins = 1;
   if (mins > 60) mins = 60;
 
-  input.value = mins;
+  if (input) input.value = mins;
   startWidget(mins);
 }
 
@@ -456,7 +479,8 @@ function startWidget(mins) {
   widgetRemaining = mins * 60;
   playSound('start');
   
-  document.getElementById('widget-label').textContent = `EN CURSO (${mins} MIN)`;
+  const label = document.getElementById('widget-label');
+  if (label) label.textContent = `EN CURSO (${mins} MIN)`;
   updateWidgetDisplay();
 
   widgetInterval = setInterval(() => {
@@ -465,7 +489,7 @@ function startWidget(mins) {
 
     if (widgetRemaining <= 0) {
       clearInterval(widgetInterval);
-      document.getElementById('widget-label').textContent = '¡TIEMPO CUMPLIDO!';
+      if (label) label.textContent = '¡TIEMPO CUMPLIDO!';
       playSound('complete');
       alert('🔔 Mini-Widget: ¡Tiempo auxiliar finalizado!');
     }
@@ -475,15 +499,19 @@ function startWidget(mins) {
 function stopWidget() {
   clearInterval(widgetInterval);
   widgetRemaining = 0;
-  document.getElementById('widget-label').textContent = 'LISTO';
-  document.getElementById('widget-display').textContent = '00:00';
+  const label = document.getElementById('widget-label');
+  const display = document.getElementById('widget-display');
+  if (label) label.textContent = 'LISTO';
+  if (display) display.textContent = '00:00';
 }
 
 function updateWidgetDisplay() {
   const m = Math.floor(widgetRemaining / 60);
   const s = widgetRemaining % 60;
-  document.getElementById('widget-display').textContent = 
-    `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  const display = document.getElementById('widget-display');
+  if (display) {
+    display.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
 }
 
 /* ================= RECORDATORIO AGUA ================= */
@@ -502,7 +530,8 @@ function requestNotifyPermission() {
 }
 
 function updateWaterReminder() {
-  const val = parseInt(document.getElementById('water-interval').value);
+  const select = document.getElementById('water-interval');
+  const val = parseInt(select ? select.value : 0);
   waterIntervalTime = val;
   localStorage.setItem('cyber_water_int', waterIntervalTime);
   initWaterReminder();
@@ -528,8 +557,10 @@ function initWaterReminder() {
 
 /* ================= CALENDARIO ================= */
 function renderCalendar() {
-  document.getElementById('cal-month-title').textContent = `${monthNames[currentMonth]} ${currentYear}`;
+  const title = document.getElementById('cal-month-title');
+  if (title) title.textContent = `${monthNames[currentMonth]} ${currentYear}`;
   const grid = document.getElementById('cal-grid');
+  if (!grid) return;
   grid.innerHTML = '';
 
   let firstDayIndex = new Date(currentYear, currentMonth, 1).getDay() - 1;
@@ -579,8 +610,10 @@ function nextMonth() {
 
 function renderDayHistory() {
   const [y, m, d] = selectedCalDate.split('-');
-  document.getElementById('selected-day-label').textContent = `SESIONES DEL ${d}/${m}/${y}`;
+  const label = document.getElementById('selected-day-label');
+  if (label) label.textContent = `SESIONES DEL ${d}/${m}/${y}`;
   const list = document.getElementById('day-history-list');
+  if (!list) return;
   list.innerHTML = '';
 
   const daySessions = sessions.filter(s => s.date === selectedCalDate);
@@ -603,6 +636,7 @@ function renderDayHistory() {
 
 function renderProfileStats() {
   const container = document.getElementById('all-time-stats');
+  if (!container) return;
   container.innerHTML = '';
 
   const totals = {};
