@@ -25,17 +25,14 @@ const monthNames = [
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
 ];
 
-// Temporizador Principal
+// Temporizadores
 let timerInterval = null;
 let remainingSeconds = 0;
 let targetMinutes = 20;
 let isRunning = false;
 
-// Widget Auxiliar
 let widgetInterval = null;
 let widgetRemaining = 0;
-
-// Recordatorio de agua
 let waterTimer = null;
 
 function init() {
@@ -52,7 +49,6 @@ function init() {
       val ? `> Misión: ${val}` : '> Misión: Sin subgrupo';
   });
 
-  // Salir de pantalla cancela SOLO el temporizador principal
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && isRunning) {
       cancelTimer(false);
@@ -65,6 +61,8 @@ function init() {
 
 function applyTheme(theme) {
   document.body.className = '';
+  if (isRunning) document.body.classList.add('focus-mode');
+  
   if (theme === 'deep') document.body.classList.add('theme-deep');
   if (theme === 'light') document.body.classList.add('theme-light');
 
@@ -177,7 +175,7 @@ function deleteTag(tagToDelete) {
   renderProfileStats();
 }
 
-/* ================= CRONÓMETRO Y MODO FOCO ABSOLUTO ================= */
+/* ================= CRONÓMETRO: MODO FOCO TOTAL CENTRADO ================= */
 
 function updateUI() {
   const level = Math.floor(totalXp / 100) + 1;
@@ -205,7 +203,10 @@ function startTimer() {
   remainingSeconds = targetMinutes * 60;
   isRunning = true;
 
-  // MODO FOCO: Ocultar todo excepto el reloj principal y botón abortar
+  // Activa la clase global de foco para centrar todo en la pantalla
+  document.body.classList.add('focus-mode');
+
+  // Ocultar elementos sobrantes
   document.getElementById('main-nav-tabs').style.display = 'none';
   document.getElementById('panel-level-xp').style.display = 'none';
   document.getElementById('tags-panel').style.display = 'none';
@@ -229,7 +230,8 @@ function startTimer() {
 }
 
 function restoreUIAfterTimer() {
-  // Restaurar todos los paneles ocultos
+  document.body.classList.remove('focus-mode');
+
   document.getElementById('main-nav-tabs').style.display = 'flex';
   document.getElementById('panel-level-xp').style.display = 'block';
   document.getElementById('tags-panel').style.display = 'block';
@@ -351,7 +353,7 @@ function initWaterReminder() {
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('💧 Hidratación Requerida', {
           body: 'Hora de beber un vaso de agua.',
-          icon: 'icono.png'
+          icon: 'icono.svg'
         });
       } else {
         alert('💧 ¡Hora de beber agua!');
@@ -433,7 +435,7 @@ function renderDayHistory() {
   const daySessions = sessions.filter(s => s.date === selectedCalDate);
 
   if (daySessions.length === 0) {
-    list.innerHTML = '<div style="color: var(--text-muted); font-size: 0.8rem; text-align: center; padding: 6px;">Sin registros en esta fecha.</div>';
+    list.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem; text-align: center; padding: 10px;">Sin registros en esta fecha.</div>';
     return;
   }
 
