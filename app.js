@@ -24,6 +24,7 @@ const monthNames = [
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
 ];
 
+// Definición de logros del sistema
 const BADGES = [
   { id: 'first_step', icon: '⚡', name: 'Primer Enfoque', desc: 'Completa tu primera sesión' },
   { id: 'streak_3', icon: '🔥', name: 'Constancia', desc: 'Racha de 3 días seguidos' },
@@ -39,7 +40,7 @@ let remainingSeconds = 0;
 let targetMinutes = 20;
 let isRunning = false;
 
-let wakeLock = null;
+let wakeLock = null; // Wake Lock API para mantener pantalla encendida
 let widgetInterval = null;
 let widgetRemaining = 0;
 let waterTimer = null;
@@ -53,13 +54,6 @@ function init() {
   renderBadges();
   initWaterReminder();
 
-  // Sonido al interactuar con elementos
-  document.addEventListener('click', (e) => {
-    if (e.target.closest('button') || e.target.closest('.tag-pill') || e.target.closest('.day-cell')) {
-      playSound('click');
-    }
-  });
-
   document.addEventListener('visibilitychange', () => {
     if (document.hidden && isRunning) {
       cancelTimer(false);
@@ -68,77 +62,7 @@ function init() {
   });
 }
 
-/* ================= MOTOR DE SONIDO ================= */
-let audioCtxInstance = null;
-
-function getAudioCtx() {
-  try {
-    if (!audioCtxInstance) {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      if (AudioContext) audioCtxInstance = new AudioContext();
-    }
-    if (audioCtxInstance && audioCtxInstance.state === 'suspended') {
-      audioCtxInstance.resume();
-    }
-    return audioCtxInstance;
-  } catch (e) {
-    return null;
-  }
-}
-
-function playSound(type) {
-  try {
-    const c = getAudioCtx();
-    if (!c) return;
-    const now = c.currentTime;
-    const osc = c.createOscillator();
-    const gain = c.createGain();
-    osc.connect(gain);
-    gain.connect(c.destination);
-
-    if (type === 'click') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(650, now);
-      osc.frequency.exponentialRampToValueAtTime(300, now + 0.03);
-      gain.gain.setValueAtTime(0.04, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.03);
-      osc.start(now);
-      osc.stop(now + 0.03);
-    } else if (type === 'start') {
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(440, now);
-      osc.frequency.setValueAtTime(880, now + 0.1);
-      gain.gain.setValueAtTime(0.08, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-      osc.start(now);
-      osc.stop(now + 0.22);
-    } else if (type === 'complete') {
-      const notes = [523.25, 659.25, 783.99, 1046.50];
-      notes.forEach((freq, idx) => {
-        const o = c.createOscillator();
-        const g = c.createGain();
-        o.type = 'square';
-        o.frequency.setValueAtTime(freq, now + idx * 0.08);
-        o.connect(g);
-        g.connect(c.destination);
-        g.gain.setValueAtTime(0.06, now + idx * 0.08);
-        g.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.14);
-        o.start(now + idx * 0.08);
-        o.stop(now + idx * 0.08 + 0.14);
-      });
-    } else if (type === 'abort') {
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(300, now);
-      osc.frequency.linearRampToValueAtTime(120, now + 0.22);
-      gain.gain.setValueAtTime(0.06, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-      osc.start(now);
-      osc.stop(now + 0.22);
-    }
-  } catch (e) {}
-}
-
-/* ================= WAKE LOCK ================= */
+/* ================= WAKE LOCK (PANTALLA SIEMPRE ACTIVA) ================= */
 async function requestWakeLock() {
   try {
     if ('wakeLock' in navigator) {
@@ -153,7 +77,7 @@ function releaseWakeLock() {
   }
 }
 
-/* ================= TEMAS Y VISTAS ================= */
+/* ================= TEMAS ================= */
 function applyTheme(theme) {
   document.body.className = '';
   if (theme === 'deep') document.body.classList.add('theme-deep');
@@ -189,15 +113,13 @@ function switchView(view) {
     renderCalendar();
     renderProfileStats();
     renderBadges();
-    const waterSelect = document.getElementById('water-interval');
-    if (waterSelect) waterSelect.value = waterIntervalTime;
+    document.getElementById('water-interval').value = waterIntervalTime;
   }
 }
 
 /* ================= ETIQUETAS ================= */
 function renderTags() {
   const container = document.getElementById('tag-list');
-  if (!container) return;
   container.innerHTML = '';
 
   if (tags.length === 0) {
@@ -222,7 +144,6 @@ function renderTags() {
     const delBtn = document.createElement('span');
     delBtn.className = 'tag-del-btn';
     delBtn.textContent = '×';
-    delBtn.title = 'Eliminar';
     delBtn.onclick = (e) => {
       e.stopPropagation();
       deleteTag(tag);
@@ -235,7 +156,6 @@ function renderTags() {
 
 function addNewTag() {
   const input = document.getElementById('new-tag-input');
-  if (!input) return;
   const val = input.value.trim();
   if (!val) return;
 
@@ -266,7 +186,7 @@ function deleteTag(tagToDelete) {
   renderProfileStats();
 }
 
-/* ================= NIVELES Y RACHAS ================= */
+/* ================= RANGOS, NIVELES Y RACHAS ================= */
 function getRankTitle(level) {
   if (level < 3) return 'RANGO: INICIADO';
   if (level < 6) return 'RANGO: OPERADOR FOCO';
@@ -277,6 +197,7 @@ function getRankTitle(level) {
 }
 
 function calculateStreak() {
+  // Sumar minutos por día
   const dailyMins = {};
   sessions.forEach(s => {
     dailyMins[s.date] = (dailyMins[s.date] || 0) + s.mins;
@@ -286,6 +207,7 @@ function calculateStreak() {
   let check = new Date();
   const todayStr = formatDate(check);
 
+  // Si hoy aún no se han hecho 15 min, comprobar desde ayer
   if ((dailyMins[todayStr] || 0) < 15) {
     check.setDate(check.getDate() - 1);
   }
@@ -306,43 +228,30 @@ function updateUI() {
   const level = Math.floor(totalXp / 100) + 1;
   const currentXp = totalXp % 100;
   
-  const levelEl = document.getElementById('level');
-  const rankEl = document.getElementById('rank-title');
-  const streakEl = document.getElementById('streak-count');
-  const xpEl = document.getElementById('current-xp');
-  const xpFillEl = document.getElementById('xp-fill');
-
-  if (levelEl) levelEl.textContent = level;
-  if (rankEl) rankEl.textContent = getRankTitle(level);
-  if (streakEl) streakEl.textContent = calculateStreak();
-  if (xpEl) xpEl.textContent = currentXp;
-  if (xpFillEl) xpFillEl.style.width = `${currentXp}%`;
+  document.getElementById('level').textContent = level;
+  document.getElementById('rank-title').textContent = getRankTitle(level);
+  document.getElementById('streak-count').textContent = calculateStreak();
+  document.getElementById('current-xp').textContent = currentXp;
+  document.getElementById('xp-fill').style.width = `${currentXp}%`;
 }
 
-/* ================= CRONÓMETRO ================= */
+/* ================= CRONÓMETRO CON CENTRADO ABSOLUTO ================= */
 function startTimer() {
-  const minsInput = document.getElementById('minutes-input');
-  targetMinutes = minsInput ? (parseInt(minsInput.value) || 20) : 20;
+  targetMinutes = parseInt(document.getElementById('minutes-input').value) || 1;
   remainingSeconds = targetMinutes * 60;
   isRunning = true;
 
-  playSound('start');
-  requestWakeLock();
+  requestWakeLock(); // Mantener pantalla encendida
 
-  const subInput = document.getElementById('subgroup-input');
-  const sub = (subInput && subInput.value.trim()) ? subInput.value.trim() : 'Sin subgrupo';
-  
-  const tagTitle = document.getElementById('focus-tag-title');
-  const subTitle = document.getElementById('focus-sub-title');
-  if (tagTitle) tagTitle.textContent = `[ ${selectedTag.toUpperCase()} ]`;
-  if (subTitle) subTitle.textContent = `> Misión: ${sub}`;
+  const sub = document.getElementById('subgroup-input').value.trim() || 'Sin subgrupo';
+  document.getElementById('focus-tag-title').textContent = `[ ${selectedTag.toUpperCase()} ]`;
+  document.getElementById('focus-sub-title').textContent = `> Misión: ${sub}`;
 
   document.getElementById('focus-overlay').style.display = 'flex';
   document.getElementById('app-container').style.display = 'none';
 
   updateFocusClockDisplay();
 
-  clearInterval(timerInterval);
   timerInterval = setInterval(() => {
     remainingSeconds--;
     updateFocusClockDisplay();
@@ -356,10 +265,8 @@ function startTimer() {
 function updateFocusClockDisplay() {
   const m = Math.floor(remainingSeconds / 60);
   const s = remainingSeconds % 60;
-  const clockEl = document.getElementById('focus-clock-display');
-  if (clockEl) {
-    clockEl.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  }
+  document.getElementById('focus-clock-display').textContent = 
+    `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
 function closeFocusOverlay() {
@@ -371,7 +278,6 @@ function closeFocusOverlay() {
 function cancelTimer(manual = false) {
   clearInterval(timerInterval);
   isRunning = false;
-  playSound('abort');
   closeFocusOverlay();
   updateUI();
   if (manual) alert('Sesión cancelada. 0 puntos obtenidos.');
@@ -380,13 +286,11 @@ function cancelTimer(manual = false) {
 function completeSession() {
   clearInterval(timerInterval);
   isRunning = false;
-  playSound('complete');
 
   const earnedXp = targetMinutes * 2;
   totalXp += earnedXp;
 
-  const subInput = document.getElementById('subgroup-input');
-  const sub = (subInput && subInput.value.trim()) ? subInput.value.trim() : 'General';
+  const sub = document.getElementById('subgroup-input').value.trim() || 'General';
   const now = new Date();
   const todayStr = formatDate(now);
 
@@ -400,6 +304,7 @@ function completeSession() {
   localStorage.setItem('cyber_timer_xp', totalXp);
   localStorage.setItem('cyber_sessions', JSON.stringify(sessions));
 
+  // Comprobar y otorgar insignias desbloqueadas
   checkBadges(now, todayStr);
 
   closeFocusOverlay();
@@ -407,7 +312,7 @@ function completeSession() {
   alert(`⚡ MISIÓN COMPLETADA EN [${selectedTag} / ${sub}]: +${earnedXp} XP y +${targetMinutes} min.`);
 }
 
-/* ================= LOGROS ================= */
+/* ================= COMPROBACIÓN DE MEDALLAS ================= */
 function checkBadges(finishDate, todayStr) {
   let newlyUnlocked = [];
 
@@ -418,23 +323,28 @@ function checkBadges(finishDate, todayStr) {
     }
   }
 
+  // 1. Primer paso
   if (sessions.length >= 1) unlock('first_step');
 
+  // 2. Racha 3 y 7 días
   const streak = calculateStreak();
   if (streak >= 3) unlock('streak_3');
   if (streak >= 7) unlock('streak_7');
 
+  // 3. Centurión (100 min hoy)
   const todayMins = sessions
     .filter(s => s.date === todayStr)
     .reduce((sum, s) => sum + s.mins, 0);
   if (todayMins >= 100) unlock('centurion');
 
+  // 4. Horas nocturnas / madrugadoras
   const hour = finishDate.getHours();
   if (hour >= 22) unlock('night_owl');
   if (hour < 8) unlock('early_bird');
 
+  // 5. Más de 300 min en ejercicio
   const exerciseMins = sessions
-    .filter(s => s.tag && s.tag.toLowerCase() === 'ejercicio')
+    .filter(s => s.tag.toLowerCase() === 'ejercicio')
     .reduce((sum, s) => sum + s.mins, 0);
   if (exerciseMins >= 300) unlock('iron_body');
 
@@ -465,22 +375,20 @@ function renderBadges() {
 /* ================= WIDGET AUXILIAR ================= */
 function startCustomWidget() {
   const input = document.getElementById('widget-custom-mins');
-  let mins = parseInt(input ? input.value : 5);
+  let mins = parseInt(input.value);
 
   if (isNaN(mins) || mins < 1) mins = 1;
   if (mins > 60) mins = 60;
 
-  if (input) input.value = mins;
+  input.value = mins;
   startWidget(mins);
 }
 
 function startWidget(mins) {
   clearInterval(widgetInterval);
   widgetRemaining = mins * 60;
-  playSound('start');
   
-  const label = document.getElementById('widget-label');
-  if (label) label.textContent = `EN CURSO (${mins} MIN)`;
+  document.getElementById('widget-label').textContent = `EN CURSO (${mins} MIN)`;
   updateWidgetDisplay();
 
   widgetInterval = setInterval(() => {
@@ -489,8 +397,8 @@ function startWidget(mins) {
 
     if (widgetRemaining <= 0) {
       clearInterval(widgetInterval);
-      if (label) label.textContent = '¡TIEMPO CUMPLIDO!';
-      playSound('complete');
+      document.getElementById('widget-label').textContent = '¡TIEMPO CUMPLIDO!';
+      playBeep();
       alert('🔔 Mini-Widget: ¡Tiempo auxiliar finalizado!');
     }
   }, 1000);
@@ -499,19 +407,15 @@ function startWidget(mins) {
 function stopWidget() {
   clearInterval(widgetInterval);
   widgetRemaining = 0;
-  const label = document.getElementById('widget-label');
-  const display = document.getElementById('widget-display');
-  if (label) label.textContent = 'LISTO';
-  if (display) display.textContent = '00:00';
+  document.getElementById('widget-label').textContent = 'LISTO';
+  document.getElementById('widget-display').textContent = '00:00';
 }
 
 function updateWidgetDisplay() {
   const m = Math.floor(widgetRemaining / 60);
   const s = widgetRemaining % 60;
-  const display = document.getElementById('widget-display');
-  if (display) {
-    display.textContent = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-  }
+  document.getElementById('widget-display').textContent = 
+    `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
 }
 
 /* ================= RECORDATORIO AGUA ================= */
@@ -530,8 +434,7 @@ function requestNotifyPermission() {
 }
 
 function updateWaterReminder() {
-  const select = document.getElementById('water-interval');
-  const val = parseInt(select ? select.value : 0);
+  const val = parseInt(document.getElementById('water-interval').value);
   waterIntervalTime = val;
   localStorage.setItem('cyber_water_int', waterIntervalTime);
   initWaterReminder();
@@ -542,7 +445,7 @@ function initWaterReminder() {
   if (waterIntervalTime > 0) {
     const ms = waterIntervalTime * 60 * 1000;
     waterTimer = setInterval(() => {
-      playSound('complete');
+      playBeep();
       if ('Notification' in window && Notification.permission === 'granted') {
         new Notification('💧 Hidratación Requerida', {
           body: 'Hora de beber un vaso de agua.',
@@ -555,12 +458,22 @@ function initWaterReminder() {
   }
 }
 
+function playBeep() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(587.33, ctx.currentTime);
+    osc.connect(ctx.destination);
+    osc.start();
+    osc.stop(ctx.currentTime + 0.2);
+  } catch (e) {}
+}
+
 /* ================= CALENDARIO ================= */
 function renderCalendar() {
-  const title = document.getElementById('cal-month-title');
-  if (title) title.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+  document.getElementById('cal-month-title').textContent = `${monthNames[currentMonth]} ${currentYear}`;
   const grid = document.getElementById('cal-grid');
-  if (!grid) return;
   grid.innerHTML = '';
 
   let firstDayIndex = new Date(currentYear, currentMonth, 1).getDay() - 1;
@@ -610,10 +523,8 @@ function nextMonth() {
 
 function renderDayHistory() {
   const [y, m, d] = selectedCalDate.split('-');
-  const label = document.getElementById('selected-day-label');
-  if (label) label.textContent = `SESIONES DEL ${d}/${m}/${y}`;
+  document.getElementById('selected-day-label').textContent = `SESIONES DEL ${d}/${m}/${y}`;
   const list = document.getElementById('day-history-list');
-  if (!list) return;
   list.innerHTML = '';
 
   const daySessions = sessions.filter(s => s.date === selectedCalDate);
@@ -636,7 +547,6 @@ function renderDayHistory() {
 
 function renderProfileStats() {
   const container = document.getElementById('all-time-stats');
-  if (!container) return;
   container.innerHTML = '';
 
   const totals = {};
